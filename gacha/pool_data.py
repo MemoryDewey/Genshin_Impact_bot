@@ -3,6 +3,7 @@ from PIL import Image,ImageFont,ImageDraw,ImageMath
 from loguru import logger
 from io import BytesIO
 
+import collections
 import httpx
 import asyncio
 import re
@@ -43,32 +44,15 @@ UP_PROBABILITY = {
     "武器up池": 0.75
 }
 
-POOL = {
-    # 这个字典记录的是3个不同的卡池，每个卡池的抽取列表
-    '角色up池': {
+# 这个字典记录的是3个不同的卡池，每个卡池的抽取列表
+POOL = collections.defaultdict(
+    lambda: {
         '5_star_UP': [],
-        '5_star_not_UP':[],
+        '5_star_not_UP': [],
         '4_star_UP': [],
-        '4_star_not_UP':[],
-        '3_star_not_UP':[]
-    },
-
-    '武器up池': {
-        '5_star_UP': [],
-        '5_star_not_UP':[],
-        '4_star_UP': [],
-        '4_star_not_UP':[],
-        '3_star_not_UP':[]
-    },
-
-    '常驻池': {
-        '5_star_UP': [],
-        '5_star_not_UP':[],
-        '4_star_UP': [],
-        '4_star_not_UP':[],
-        '3_star_not_UP':[]
-    }
-}
+        '4_star_not_UP': [],
+        '3_star_not_UP': []
+    })
 
 DISTANCE_FREQUENCY = {
     # 3个池子的5星是多少发才保底
@@ -192,8 +176,10 @@ async def paste_arm_icon(ch_name,star):
     bg_a = bg.getchannel("A")
     bg1 = Image.new("RGBA",bg.size)
     txt_bg = Image.new("RGBA",(160,35),"#e9e5dc")
-    arm_icon = arm_icon.resize((130, 160))
-    bg.paste(arm_icon, (17,3),arm_icon)
+    x = int(160/256 * arm_icon.size[0])
+    arm_icon = arm_icon.resize((x, 160))
+    x_pos = int(160 / 2 - x / 2)
+    bg.paste(arm_icon, (x_pos,3),arm_icon)
     bg.paste(txt_bg, (0,163))
     draw = ImageDraw.Draw(bg)
     draw.text((80, 180), ch_name, fill="#4a5466ff", font=FONT, anchor="mm",align="center")
@@ -243,6 +229,9 @@ async def init_pool_list():
     ROLES_HTML_LIST = None
     ARMS_HTML_LIST = None
 
+    # fix: #61
+    POOL.clear()
+    
     logger.info(f"正在更新卡池数据")
     data = await get_url_data(POOL_API)
     data = json.loads(data.decode("utf-8"))
