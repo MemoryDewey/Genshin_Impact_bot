@@ -15,7 +15,7 @@ def get_format_sub_item(artifact_attr):
     return msg
 
 
-@sv.on_prefix(("圣遗物评分", "-rate"))
+@sv.on_prefix(("旧版圣遗物评分", "-rate"))
 async def artifact_rate(bot, ev):
     if '[CQ:image' not in ev["raw_message"]:
         await bot.send(ev, "图呢？\n*请将-rate指令与截图一起发送", at_sender=True)
